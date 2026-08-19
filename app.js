@@ -13,21 +13,21 @@ const PRICING = {
     high: { weekday: 80, weekend: 90 },
     low: { weekday: 70, weekend: 80 }
   },
-  durationLowBase: {
-    standard: {
-      2: 140,
-      3: 180,
-      4: 220,
-      5: 260,
-      6: 300
-    },
-    allWeekday: {
-      2: 130,
-      3: 170,
-      4: 210,
-      5: 250,
-      6: 290
-    }
+  // 2–6 nits: dues corbes segons si tota l'estada és entre setmana
+  // o si inclou almenys una nit de divendres/dissabte.
+  durationLowBaseWeekday: {
+    2: 130,
+    3: 170,
+    4: 210,
+    5: 250,
+    6: 290
+  },
+  durationLowBaseStandard: {
+    2: 140,
+    3: 180,
+    4: 220,
+    5: 260,
+    6: 300
   },
   highNightPremiumFor2to6: 10,
   week: { low: 330, high: 400 },
@@ -214,17 +214,22 @@ function calculatePrice(nights) {
 
   if (count >= 2 && count <= 6) {
     const allWeekday = nights.every(n => !n.weekend);
-    const tariffFamily = allWeekday ? 'allWeekday' : 'standard';
-    const lowBase = PRICING.durationLowBase[tariffFamily][count];
+    const lowBase = allWeekday
+      ? PRICING.durationLowBaseWeekday[count]
+      : PRICING.durationLowBaseStandard[count];
     const premium = highCount * PRICING.highNightPremiumFor2to6;
     const price = lowBase + premium;
-    const weekdayText = allWeekday ? ' · estada íntegrament entre setmana' : ' · inclou divendres o dissabte';
-    const explanation = highCount === 0
-      ? `${count} nits${weekdayText} · tarifa de temporada baixa: ${lowBase} €.`
-      : highCount === count
-        ? `${count} nits${weekdayText} · tarifa de temporada alta: ${price} €.`
-        : `${count} nits${weekdayText} · base baixa ${lowBase} € + ${highCount} ${highCount === 1 ? 'nit alta' : 'nits altes'} × 10 € = ${price} €.`;
-    return { price, model: 'duration', highCount, lowCount, allWeekday, explanation };
+    const tariffType = allWeekday ? 'tarifa entre setmana' : 'tarifa amb divendres/dissabte';
+
+    let explanation;
+    if (highCount === 0) {
+      explanation = `${count} nits · ${tariffType} · temporada baixa: ${lowBase} €.`;
+    } else if (highCount === count) {
+      explanation = `${count} nits · ${tariffType} · temporada alta: ${price} €.`;
+    } else {
+      explanation = `${count} nits · ${tariffType} · base baixa ${lowBase} € + ${highCount} ${highCount === 1 ? 'nit alta' : 'nits altes'} × 10 € = ${price} €.`;
+    }
+    return { price, model: allWeekday ? 'duration-weekday' : 'duration-standard', highCount, lowCount, explanation };
   }
 
   // 7 o més: una setmana + nits addicionals segons temporada.
