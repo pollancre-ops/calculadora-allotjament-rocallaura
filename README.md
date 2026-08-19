@@ -23,17 +23,38 @@ No utilitza base de dades, login, cookies ni dependències de JavaScript.
 - Baixa divendres/dissabte: 80 €.
 
 ### 2–6 nits
-- Base baixa: 2 = 140 €, 3 = 180 €, 4 = 210 €, 5 = 240 €, 6 = 270 €.
-- S'afegeixen 10 € per cada nit que cau en temporada alta.
+Hi ha dues famílies de tarifa segons els dies de l'estada.
+
+**Estada íntegrament entre setmana** (cap nit és divendres ni dissabte):
+
+| Nits | Alta | Baixa |
+|---:|---:|---:|
+| 2 | 150 € | 130 € |
+| 3 | 200 € | 170 € |
+| 4 | 250 € | 210 € |
+| 5 | 300 € | 250 € |
+| 6 | 350 € | 290 € |
+
+**Estada que inclou divendres o dissabte:**
+
+| Nits | Alta | Baixa |
+|---:|---:|---:|
+| 2 | 160 € | 140 € |
+| 3 | 210 € | 180 € |
+| 4 | 260 € | 220 € |
+| 5 | 310 € | 260 € |
+| 6 | 360 € | 300 € |
+
+Per a estades mixtes d'alta i baixa, es parteix de la tarifa de baixa corresponent i s'afegeixen 10 € per cada nit que cau en temporada alta.
 
 ### 7 nits
-- 290 € si totes les nits són de baixa.
-- 350 € si totes són d'alta.
-- Si és una setmana mixta, es prorrateja entre 290 i 350 € segons nits d'alta i s'arrodoneix a 5 €.
+- 330 € si totes les nits són de baixa.
+- 400 € si totes són d'alta.
+- Si és una setmana mixta, es prorrateja entre 330 i 400 € segons el nombre de nits d'alta. Com que la diferència és de 70 €, equival a +10 € per cada nit alta.
 
 ### Més de 7 nits
 - Primera setmana segons la regla anterior.
-- Cada nit posterior: +40 € si és alta / +30 € si és baixa.
+- Cada nit posterior: +50 € si és alta / +40 € si és baixa.
 
 ## Editar ponts i dates especials
 

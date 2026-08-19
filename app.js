@@ -14,15 +14,24 @@ const PRICING = {
     low: { weekday: 70, weekend: 80 }
   },
   durationLowBase: {
-    2: 140,
-    3: 180,
-    4: 210,
-    5: 240,
-    6: 270
+    standard: {
+      2: 140,
+      3: 180,
+      4: 220,
+      5: 260,
+      6: 300
+    },
+    allWeekday: {
+      2: 130,
+      3: 170,
+      4: 210,
+      5: 250,
+      6: 290
+    }
   },
   highNightPremiumFor2to6: 10,
-  week: { low: 290, high: 350 },
-  extraNight: { low: 30, high: 40 }
+  week: { low: 330, high: 400 },
+  extraNight: { low: 40, high: 50 }
 };
 
 // Ponts/dates especials que volem tractar com a temporada alta.
@@ -204,15 +213,18 @@ function calculatePrice(nights) {
   }
 
   if (count >= 2 && count <= 6) {
-    const lowBase = PRICING.durationLowBase[count];
+    const allWeekday = nights.every(n => !n.weekend);
+    const tariffFamily = allWeekday ? 'allWeekday' : 'standard';
+    const lowBase = PRICING.durationLowBase[tariffFamily][count];
     const premium = highCount * PRICING.highNightPremiumFor2to6;
     const price = lowBase + premium;
+    const weekdayText = allWeekday ? ' · estada íntegrament entre setmana' : ' · inclou divendres o dissabte';
     const explanation = highCount === 0
-      ? `${count} nits · tarifa de temporada baixa: ${lowBase} €.`
+      ? `${count} nits${weekdayText} · tarifa de temporada baixa: ${lowBase} €.`
       : highCount === count
-        ? `${count} nits · tarifa de temporada alta: ${price} €.`
-        : `${count} nits · base baixa ${lowBase} € + ${highCount} ${highCount === 1 ? 'nit alta' : 'nits altes'} × 10 € = ${price} €.`;
-    return { price, model: 'duration', highCount, lowCount, explanation };
+        ? `${count} nits${weekdayText} · tarifa de temporada alta: ${price} €.`
+        : `${count} nits${weekdayText} · base baixa ${lowBase} € + ${highCount} ${highCount === 1 ? 'nit alta' : 'nits altes'} × 10 € = ${price} €.`;
+    return { price, model: 'duration', highCount, lowCount, allWeekday, explanation };
   }
 
   // 7 o més: una setmana + nits addicionals segons temporada.
@@ -232,8 +244,8 @@ function calculatePrice(nights) {
   }
   if (extras.length) {
     const parts = [];
-    if (extraHigh) parts.push(`${extraHigh} × 40 € alta`);
-    if (extraLow) parts.push(`${extraLow} × 30 € baixa`);
+    if (extraHigh) parts.push(`${extraHigh} × ${PRICING.extraNight.high} € alta`);
+    if (extraLow) parts.push(`${extraLow} × ${PRICING.extraNight.low} € baixa`);
     explanation += ` + nits addicionals: ${parts.join(' + ')} = ${price} €.`;
   } else {
     explanation += '.';
