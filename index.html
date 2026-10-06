@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#1f2a24" />
   <title>Rocallaura · Calculadora d'allotjament</title>
-  <link rel="stylesheet" href="styles.css?v=20261006-3" />
+  <link rel="stylesheet" href="styles.css?v=20261006-5" />
 </head>
 <body>
   <main class="shell">
@@ -18,26 +18,62 @@
       <span class="internal-badge">Ús intern</span>
     </header>
 
-    <section class="card form-card" aria-labelledby="dates-title">
-      <div class="section-head">
+    <section class="card booking-card" aria-labelledby="calendar-title">
+      <div class="section-head calendar-head">
         <div>
           <p class="section-kicker">01</p>
-          <h2 id="dates-title">Selecciona les dates</h2>
+          <h2 id="calendar-title">Selecciona l'estada</h2>
+        </div>
+        <button id="calendarToday" class="small-button" type="button">Avui</button>
+      </div>
+
+      <div class="calendar-toolbar">
+        <button id="calendarPrev" class="calendar-nav" type="button" aria-label="Mes anterior">‹</button>
+        <strong id="calendarMonthLabel">—</strong>
+        <button id="calendarNext" class="calendar-nav" type="button" aria-label="Mes següent">›</button>
+      </div>
+
+      <div class="calendar-legend" aria-label="Llegenda del calendari">
+        <span><i class="legend-swatch low"></i>Baixa</span>
+        <span><i class="legend-swatch high"></i>Alta</span>
+        <span><i class="legend-swatch special"></i>Alta especial</span>
+      </div>
+
+      <div class="calendar-weekdays" aria-hidden="true">
+        <span>Dl</span><span>Dt</span><span>Dc</span><span>Dj</span><span>Dv</span><span>Ds</span><span>Dg</span>
+      </div>
+      <div id="calendarGrid" class="calendar-grid" role="grid" aria-label="Calendari de selecció i temporades"></div>
+
+      <div class="selection-panel">
+        <div class="selection-dates">
+          <div>
+            <span class="selection-label">Entrada</span>
+            <strong id="selectedCheckin">Selecciona un dia</strong>
+          </div>
+          <span class="selection-arrow">→</span>
+          <div>
+            <span class="selection-label">Sortida</span>
+            <strong id="selectedCheckout">—</strong>
+          </div>
+        </div>
+        <p id="selectionHint" class="selection-hint">Toca el dia d'entrada i després el dia de sortida.</p>
+        <button id="clearDates" class="text-button" type="button" hidden>Netejar dates</button>
+      </div>
+
+      <div id="dateSpecialNotice" class="date-special-notice" hidden></div>
+
+      <div class="bungalow-row">
+        <div>
+          <span class="control-label">Bungalows</span>
+          <small>Fins a 4 unitats</small>
+        </div>
+        <div class="stepper" aria-label="Nombre de bungalows">
+          <button id="bungalowMinus" type="button" aria-label="Treure un bungalow">−</button>
+          <strong id="bungalowCount">1</strong>
+          <button id="bungalowPlus" type="button" aria-label="Afegir un bungalow">+</button>
         </div>
       </div>
 
-      <div class="date-grid">
-        <label class="field">
-          <span>Entrada</span>
-          <input id="checkin" type="date" />
-        </label>
-        <label class="field">
-          <span>Sortida</span>
-          <input id="checkout" type="date" />
-        </label>
-      </div>
-      <p class="helper">La sortida no compta com a nit d'allotjament.</p>
-      <div id="dateSpecialNotice" class="date-special-notice" hidden></div>
       <div id="formError" class="error" role="alert" hidden></div>
     </section>
 
@@ -51,7 +87,7 @@
         <span class="price-label">Total orientatiu</span>
         <div class="price-row">
           <strong id="totalPrice" class="price">0 €</strong>
-          <span class="price-note">bungalow complet</span>
+          <span id="priceNote" class="price-note">1 bungalow</span>
         </div>
         <p id="totalComposition" class="total-composition" hidden></p>
       </div>
@@ -62,7 +98,11 @@
           <strong id="nightCount">0</strong>
         </div>
         <div class="stat">
-          <span class="stat-label">Mitjana allotjament / nit</span>
+          <span class="stat-label">Bungalows</span>
+          <strong id="resultBungalows">1</strong>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Mitjana / nit / bungalow</span>
           <strong id="averagePrice">0 €</strong>
         </div>
       </div>
@@ -80,6 +120,7 @@
           <label class="field compact-field">
             <span>Persones</span>
             <input id="breakfastPeople" type="number" min="1" max="5" step="1" value="2" inputmode="numeric" />
+            <small id="breakfastMaxHelp">Màxim 5 persones</small>
           </label>
           <div class="breakfast-total">
             <span id="breakfastFormula">—</span>
@@ -102,44 +143,10 @@
       <p id="copyStatus" class="copy-status" aria-live="polite"></p>
     </section>
 
-    <section class="card calendar-card" aria-labelledby="calendar-title">
-      <div class="section-head compact calendar-head">
-        <div>
-          <p class="section-kicker">02</p>
-          <h2 id="calendar-title">Calendari tarifari</h2>
-        </div>
-        <button id="calendarToday" class="small-button" type="button">Avui</button>
-      </div>
-
-      <div class="calendar-toolbar">
-        <button id="calendarPrev" class="calendar-nav" type="button" aria-label="Mes anterior">‹</button>
-        <strong id="calendarMonthLabel">—</strong>
-        <button id="calendarNext" class="calendar-nav" type="button" aria-label="Mes següent">›</button>
-      </div>
-
-      <div class="calendar-legend" aria-label="Llegenda del calendari">
-        <span><i class="legend-swatch low"></i>Baixa</span>
-        <span><i class="legend-swatch high"></i>Alta</span>
-        <span><i class="legend-swatch special"></i>Alta especial</span>
-      </div>
-
-      <div class="calendar-weekdays" aria-hidden="true">
-        <span>Dl</span><span>Dt</span><span>Dc</span><span>Dj</span><span>Dv</span><span>Ds</span><span>Dg</span>
-      </div>
-      <div id="calendarGrid" class="calendar-grid" role="grid" aria-label="Calendari de temporades"></div>
-
-      <div id="calendarSpecials" class="calendar-specials" hidden>
-        <strong>Dates especials del mes</strong>
-        <div id="calendarSpecialList" class="calendar-special-list"></div>
-      </div>
-
-      <div id="calendarDayInfo" class="calendar-day-info">Toca un dia per veure'n la temporada.</div>
-    </section>
-
     <section class="card rules-card">
       <div class="section-head compact">
         <div>
-          <p class="section-kicker">03</p>
+          <p class="section-kicker">02</p>
           <h2>Tarifes configurades</h2>
         </div>
       </div>
@@ -176,7 +183,7 @@
         <h3>Escalat per durada</h3>
         <p><strong>2–6 nits:</strong> tarifa especial segons durada, temporada i si l'estada inclou divendres o dissabte.</p>
         <p><strong>7 nits:</strong> 400 € alta · 330 € baixa.</p>
-        <p><strong>Més de 7 nits:</strong> +50 € per nit alta · +40 € per nit baixa.</p>
+        <p><strong>Més de 7 nits:</strong> primera setmana + 50 € per nit alta · 40 € per nit baixa.</p>
       </div>
 
       <p class="rules-note">El detall del càlcul mostra sempre la tarifa base de cada nit i, quan correspon, la tarifa especial final aplicada a l'estada.</p>
@@ -187,6 +194,6 @@
     </footer>
   </main>
 
-  <script src="app.js?v=20261006-3"></script>
+  <script src="app.js?v=20261006-5"></script>
 </body>
 </html>

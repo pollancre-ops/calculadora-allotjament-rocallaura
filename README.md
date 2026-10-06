@@ -1,10 +1,10 @@
 # Rocallaura · Calculadora d'allotjament
 
-Webapp estàtica i mobile-first per calcular preus orientatius dels bungalows de Rocallaura Bike Park.
+Webapp estàtica, interna i mobile-first per calcular preus orientatius dels bungalows de Rocallaura Bike Park.
 
 ## Publicació a GitHub Pages
 
-Puja aquests quatre fitxers a l'arrel del repositori:
+Puja aquests quatre fitxers a l'arrel del repositori, substituint els anteriors:
 
 - `index.html`
 - `styles.css`
@@ -13,7 +13,23 @@ Puja aquests quatre fitxers a l'arrel del repositori:
 
 No utilitza base de dades, login, cookies ni dependències externes.
 
-Els enllaços a `styles.css` i `app.js` porten un paràmetre de versió per reduir problemes de memòria cau de GitHub Pages després d'una actualització.
+## Selecció de dates
+
+L'entrada i la sortida es trien directament al calendari:
+
+1. primer clic/toc: entrada
+2. segon clic/toc: sortida
+3. l'interval queda marcat al mateix calendari
+
+La data de sortida no compta com a nit.
+
+Si ja hi ha una estada completa seleccionada, tocar un altre dia inicia una selecció nova.
+
+## Bungalows
+
+Es poden calcular simultàniament entre **1 i 4 bungalows**.
+
+La tarifa de l'estada es calcula **per bungalow** i després es multiplica pel nombre d'unitats seleccionades.
 
 ## Pricing vigent
 
@@ -34,92 +50,106 @@ Els enllaços a `styles.css` i `app.js` porten un paràmetre de versió per redu
 | 5 | 300 € | 310 € | 250 € | 260 € |
 | 6 | 350 € | 360 € | 290 € | 300 € |
 
-Per a estades que barregen alta i baixa, la base és la tarifa de baixa corresponent i s'afegeixen **10 € per cada nit d'alta**.
+Per a estades que barregen alta i baixa:
+
+- es pren la tarifa de baixa corresponent a la durada;
+- es diferencia si l'estada inclou divendres/dissabte o és íntegrament entre setmana;
+- s'afegeixen **10 € per cada nit d'alta**.
 
 ### 7 nits
 
 - 100% baixa: **330 €**
 - 100% alta: **400 €**
-- Mixta: 330 € + 10 € per cada nit d'alta.
+- mixta: **330 € + 10 € per cada nit d'alta**
 
 ### Més de 7 nits
 
-La primera setmana es calcula com anteriorment i les nits posteriors s'afegeixen a:
-
-- **+50 €** per nit alta
-- **+40 €** per nit baixa
+- primera setmana segons la regla anterior;
+- nits posteriors: **+50 € per nit alta** i **+40 € per nit baixa**.
 
 ## Temporades
 
 ### Alta recurrent
 
 - 1 de juny – 30 de setembre
-- Setmana Santa: de dilluns de Setmana Santa a Dilluns de Pasqua, calculada automàticament cada any
+- Setmana Santa: dilluns de Setmana Santa a Dilluns de Pasqua, calculada automàticament cada any
 - 24 de desembre – 6 de gener
 
 ### Alta especial
 
 Ponts i dates puntuals configurats manualment a `SPECIAL_HIGH_RANGES` dins de `app.js`.
 
-Les dates especials tenen prioritat visual. Si una data especial coincideix amb una altra regla d'alta, es mostra com **Alta especial** i s'indica el motiu.
-
 Exemple:
 
 ```js
-{ start: '2026-10-10', end: '2026-10-12', label: "Pont del 12 d'octubre" }
+{ start: '2026-10-10', end: '2026-10-12', label: "Pont del 12 d'octubre", shortLabel: 'Pont 12 oct.' }
 ```
 
-### Baixa
+Les dates especials tenen prioritat visual sobre la resta de regles d'alta.
 
-La resta de dies.
+## Calendari
 
-## Veure càlcul
+El calendari és alhora:
 
-El detall mostra per a cada nit:
+- selector d'entrada i sortida;
+- orientació de temporada baixa / alta / alta especial;
+- informació de dates especials.
 
-- data
-- temporada
-- si és entre setmana o cap de setmana
-- motiu si és una data especial
-- **tarifa base real en €/nit**
+Les dates especials mostren **el motiu directament dins de la casella del dia**, sense haver de tocar-les.
 
-A continuació compara:
-
-- suma de tarifes estàndard de les nits
-- tarifa especial final de l'estada, quan n'hi ha
-- diferència entre totes dues
-
-No es reparteix artificialment la tarifa especial entre les nits.
+Setmana Santa i Nadal/Reis també mostren una etiqueta curta al calendari.
 
 ## Avís de dates especials
 
-Quan la reserva inclou una data especial, l'avís apareix just sota els selectors d'entrada i sortida, per exemple:
+Si l'interval seleccionat inclou una data especial, apareix un avís immediat sota el calendari amb la data i el motiu.
 
-`Aquesta estada inclou 1 nit en data especial: ds. 10 oct. · Pont del 12 d'octubre`
+## Veure càlcul
+
+Per cada nit es mostra:
+
+- data;
+- temporada;
+- entre setmana o cap de setmana;
+- motiu si és una data especial;
+- **tarifa base real en €/nit**.
+
+Després es mostra:
+
+- suma de tarifes estàndard per bungalow;
+- tarifa especial per durada, si correspon;
+- nombre de bungalows;
+- total d'allotjament.
+
+No es reparteix artificialment el preu especial entre les nits.
 
 ## Esmorzars
 
-- Opcional
-- **6 € per persona i dia**
-- El nombre de dies és automàticament igual al nombre de nits reservades
-- Només cal indicar el nombre de persones
-- Màxim configurat: **5 persones**
+- opcionals;
+- **6 € per persona i dia**;
+- dies d'esmorzar = nombre de nits;
+- només s'indica el nombre de persones;
+- màxim: **5 persones per bungalow**.
 
-El pressupost separa allotjament, esmorzars i total final.
+Per exemple, amb 2 bungalows el selector permet fins a 10 persones.
 
-## Calendari tarifari
+## Pressupost copiat
 
-El calendari mensual diferencia visualment:
+El botó `Copiar pressupost` inclou:
 
-- temporada baixa
-- temporada alta
-- alta especial
-
-Les dates especials del mes apareixen també en un llistat sota el calendari amb el seu nom. En tocar qualsevol dia es mostra la classificació i la tarifa base d'aquella nit.
+- dates;
+- nombre de nits;
+- nombre de bungalows;
+- tarifa base de cada nit;
+- motiu de dates especials;
+- tarifa estàndard per bungalow;
+- tarifa especial aplicada, si correspon;
+- total d'allotjament;
+- esmorzars, si s'han activat;
+- total orientatiu final.
 
 ## Fitxers
 
-- `index.html` — estructura i interfície
+- `index.html` — interfície
 - `styles.css` — disseny responsive i calendari
-- `app.js` — pricing, temporades, esmorzars, pressupost i calendari
+- `app.js` — pricing, temporades, selecció, bungalows, esmorzars i pressupost
 - `README.md` — documentació
