@@ -46,12 +46,15 @@
         <span id="dateRange" class="date-range">—</span>
       </div>
 
+      <div id="specialNotice" class="special-notice" hidden></div>
+
       <div class="price-block">
-        <span class="price-label">Preu orientatiu</span>
+        <span class="price-label">Total orientatiu</span>
         <div class="price-row">
           <strong id="totalPrice" class="price">0 €</strong>
           <span class="price-note">bungalow complet</span>
         </div>
+        <p id="totalComposition" class="total-composition" hidden></p>
       </div>
 
       <div class="stats">
@@ -60,8 +63,33 @@
           <strong id="nightCount">0</strong>
         </div>
         <div class="stat">
-          <span class="stat-label">Mitjana / nit</span>
+          <span class="stat-label">Mitjana allotjament / nit</span>
           <strong id="averagePrice">0 €</strong>
+        </div>
+      </div>
+
+      <div class="breakfast-box">
+        <label class="breakfast-toggle">
+          <input id="breakfastEnabled" type="checkbox" />
+          <span>
+            <strong>Afegir esmorzar</strong>
+            <small>6 € per persona i dia</small>
+          </span>
+        </label>
+
+        <div id="breakfastControls" class="breakfast-controls" hidden>
+          <label class="field compact-field">
+            <span>Persones</span>
+            <input id="breakfastPeople" type="number" min="1" max="12" step="1" value="2" inputmode="numeric" />
+          </label>
+          <label class="field compact-field">
+            <span>Dies d'esmorzar</span>
+            <input id="breakfastDays" type="number" min="1" max="365" step="1" value="1" inputmode="numeric" />
+          </label>
+          <div class="breakfast-total">
+            <span>Esmorzars</span>
+            <strong id="breakfastPrice">0 €</strong>
+          </div>
         </div>
       </div>
 
@@ -71,18 +99,46 @@
       </button>
 
       <div id="breakdown" class="breakdown" hidden>
-        <div id="pricingExplanation" class="pricing-explanation"></div>
         <div id="nightList" class="night-list"></div>
+        <div id="pricingExplanation" class="pricing-explanation"></div>
       </div>
 
       <button id="copyQuote" class="primary-button" type="button">Copiar pressupost</button>
       <p id="copyStatus" class="copy-status" aria-live="polite"></p>
     </section>
 
+    <section class="card calendar-card" aria-labelledby="calendar-title">
+      <div class="section-head compact calendar-head">
+        <div>
+          <p class="section-kicker">02</p>
+          <h2 id="calendar-title">Calendari tarifari</h2>
+        </div>
+        <button id="calendarToday" class="small-button" type="button">Avui</button>
+      </div>
+
+      <div class="calendar-toolbar">
+        <button id="calendarPrev" class="calendar-nav" type="button" aria-label="Mes anterior">‹</button>
+        <strong id="calendarMonthLabel">—</strong>
+        <button id="calendarNext" class="calendar-nav" type="button" aria-label="Mes següent">›</button>
+      </div>
+
+      <div class="calendar-legend" aria-label="Llegenda del calendari">
+        <span><i class="legend-dot low"></i>Baixa</span>
+        <span><i class="legend-dot high"></i>Alta</span>
+        <span><i class="legend-dot special"></i>Alta especial</span>
+      </div>
+
+      <div class="calendar-weekdays" aria-hidden="true">
+        <span>Dl</span><span>Dt</span><span>Dc</span><span>Dj</span><span>Dv</span><span>Ds</span><span>Dg</span>
+      </div>
+      <div id="calendarGrid" class="calendar-grid" role="grid" aria-label="Calendari de temporades"></div>
+      <div id="calendarDayInfo" class="calendar-day-info">Toca un dia per veure'n la temporada.</div>
+    </section>
+
     <section class="card rules-card">
       <div class="section-head compact">
         <div>
-          <p class="section-kicker">02</p>
+          <p class="section-kicker">03</p>
           <h2>Tarifes configurades</h2>
         </div>
       </div>
@@ -101,7 +157,7 @@
         </div>
       </div>
 
-      <div class="mini-table" role="table" aria-label="Tarifes base">
+      <div class="mini-table" role="table" aria-label="Tarifes base per nit">
         <div class="mini-row mini-head" role="row">
           <span role="columnheader">1 nit</span>
           <span role="columnheader">Entre setmana</span>
@@ -115,33 +171,7 @@
         </div>
       </div>
 
-      <div class="mini-table duration-table" role="table" aria-label="Tarifes per durada entre setmana">
-        <div class="mini-row mini-head duration-row" role="row">
-          <span role="columnheader">Només entre setmana</span>
-          <span role="columnheader">Alta</span>
-          <span role="columnheader">Baixa</span>
-        </div>
-        <div class="mini-row duration-row" role="row"><strong role="cell">2 nits</strong><span role="cell">150 €</span><span role="cell">130 €</span></div>
-        <div class="mini-row duration-row" role="row"><strong role="cell">3 nits</strong><span role="cell">200 €</span><span role="cell">170 €</span></div>
-        <div class="mini-row duration-row" role="row"><strong role="cell">4 nits</strong><span role="cell">250 €</span><span role="cell">210 €</span></div>
-        <div class="mini-row duration-row" role="row"><strong role="cell">5 nits</strong><span role="cell">300 €</span><span role="cell">250 €</span></div>
-      </div>
-
-      <div class="mini-table duration-table" role="table" aria-label="Tarifes per durada amb cap de setmana">
-        <div class="mini-row mini-head duration-row" role="row">
-          <span role="columnheader">Amb dv. o ds.</span>
-          <span role="columnheader">Alta</span>
-          <span role="columnheader">Baixa</span>
-        </div>
-        <div class="mini-row duration-row" role="row"><strong role="cell">2 nits</strong><span role="cell">160 €</span><span role="cell">140 €</span></div>
-        <div class="mini-row duration-row" role="row"><strong role="cell">3 nits</strong><span role="cell">210 €</span><span role="cell">180 €</span></div>
-        <div class="mini-row duration-row" role="row"><strong role="cell">4 nits</strong><span role="cell">260 €</span><span role="cell">220 €</span></div>
-        <div class="mini-row duration-row" role="row"><strong role="cell">5 nits</strong><span role="cell">310 €</span><span role="cell">260 €</span></div>
-        <div class="mini-row duration-row" role="row"><strong role="cell">6 nits</strong><span role="cell">360 €</span><span role="cell">300 €</span></div>
-        <div class="mini-row duration-row week-row" role="row"><strong role="cell">7 nits</strong><span role="cell"><strong>400 €</strong></span><span role="cell"><strong>330 €</strong></span></div>
-      </div>
-
-      <p class="rules-note"><strong>Entre setmana:</strong> si totes les nits són de diumenge a dijous, s’aplica la tarifa reduïda. Si l’estada inclou divendres o dissabte, s’aplica la tarifa estàndard. <strong>A partir de la 4a nit:</strong> +50 € per nit en alta i +40 € per nit en baixa. <strong>7 nits:</strong> 400 € alta / 330 € baixa. <strong>Més de 7:</strong> setmana + 50 € per nit alta o +40 € per nit baixa.</p>
+      <p class="rules-note">Les estades de més d'una nit poden aplicar una tarifa especial per durada. El detall del càlcul mostra sempre les tarifes base que intervenen i la tarifa especial final aplicada.</p>
     </section>
 
     <footer>

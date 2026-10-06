@@ -1,68 +1,48 @@
-# Rocallaura · Calculadora d’allotjament
+# Rocallaura · Calculadora d'allotjament
 
 Webapp estàtica i mobile-first per calcular preus orientatius dels bungalows de Rocallaura Bike Park.
 
-## Ús
+## Publicació
 
-Obre `index.html` al navegador o publica la carpeta a GitHub Pages.
+Puja aquests quatre fitxers a l'arrel del repositori de GitHub Pages:
 
-No utilitza base de dades, login, cookies ni dependències de JavaScript.
+- `index.html`
+- `styles.css`
+- `app.js`
+- `README.md`
+
+No utilitza base de dades, login, cookies ni dependències externes de JavaScript.
+
+## Funcions
+
+- Càlcul per data d'entrada i sortida.
+- Temporada alta, baixa i alta especial.
+- Setmana Santa calculada automàticament cada any.
+- Nadal/Reis i temporada alta d'estiu.
+- Ponts i dates especials configurables manualment.
+- Detall de la tarifa base real de cada nit.
+- Comparació entre tarifa estàndard de les nits i tarifa especial aplicada a l'estada.
+- Esmorzar opcional a **6 € per persona i dia**.
+- Pressupost copiable amb desglossament complet.
+- Calendari mensual de temporades.
+
+## Important sobre el pricing
+
+Aquesta actualització **no modifica el motor de preus existent**. Només afegeix transparència al càlcul i noves funcionalitats.
+
+La configuració actual del motor es troba al principi de `app.js`, dins de `PRICING`.
 
 ## Temporades
 
-### Temporada alta
+### Alta recurrent
 - 1 de juny – 30 de setembre.
-- Setmana Santa: de dilluns de Setmana Santa a Dilluns de Pasqua, calculada automàticament per a qualsevol any.
+- Setmana Santa: de dilluns de Setmana Santa a Dilluns de Pasqua, calculada automàticament.
 - 24 de desembre – 6 de gener.
-- Ponts/dates especials inclosos manualment a `SPECIAL_HIGH_RANGES` dins de `app.js`.
 
-### Temporada baixa
-- Resta de l’any.
+### Alta especial
+Ponts i dates puntuals inclosos manualment a `SPECIAL_HIGH_RANGES`.
 
-## Tarifes
-
-### 1 nit
-- Alta entre setmana: 80 €.
-- Alta divendres/dissabte: 90 €.
-- Baixa entre setmana: 70 €.
-- Baixa divendres/dissabte: 80 €.
-
-### 2–6 nits · només entre setmana
-S’aplica quan totes les nits de l’estada són de diumenge a dijous.
-
-| Nits | Alta | Baixa |
-|---:|---:|---:|
-| 2 | 150 € | 130 € |
-| 3 | 200 € | 170 € |
-| 4 | 250 € | 210 € |
-| 5 | 300 € | 250 € |
-
-> 6 nits consecutives sempre inclouen divendres o dissabte, per tant no poden entrar en aquesta categoria.
-
-### 2–6 nits · amb divendres o dissabte
-
-| Nits | Alta | Baixa |
-|---:|---:|---:|
-| 2 | 160 € | 140 € |
-| 3 | 210 € | 180 € |
-| 4 | 260 € | 220 € |
-| 5 | 310 € | 260 € |
-| 6 | 360 € | 300 € |
-
-Per a estades mixtes entre temporada alta i baixa, es parteix de la tarifa de baixa corresponent i s’afegeixen 10 € per cada nit que cau en temporada alta.
-
-### 7 nits
-- 330 € si totes les nits són de baixa.
-- 400 € si totes són d’alta.
-- Si és una setmana mixta, es prorrateja segons el nombre de nits d’alta; la diferència de 70 € equival a +10 € per cada nit alta.
-
-### Més de 7 nits
-- Primera setmana segons la regla anterior.
-- Cada nit posterior: +50 € si és alta / +40 € si és baixa.
-
-## Editar ponts i dates especials
-
-A `app.js`, edita la constant:
+Exemple:
 
 ```js
 const SPECIAL_HIGH_RANGES = [
@@ -72,7 +52,30 @@ const SPECIAL_HIGH_RANGES = [
 
 Els rangs són inclusius.
 
+### Baixa
+La resta de dies.
+
+## Esmorzars
+
+L'esmorzar és opcional i es calcula així:
+
+`6 € × persones × dies d'esmorzar`
+
+En activar-lo, els dies coincideixen inicialment amb el nombre de nits de l'estada, però es poden modificar.
+
+## Calendari
+
+El calendari diferencia visualment:
+
+- temporada baixa;
+- temporada alta;
+- alta especial / pont / festiu configurat.
+
+En tocar un dia es mostra el motiu de la classificació.
+
 ## Fitxers
-- `index.html` — estructura.
-- `styles.css` — disseny responsive.
-- `app.js` — calendari i motor de preus.
+
+- `index.html` — estructura i interfície.
+- `styles.css` — disseny responsive i calendari.
+- `app.js` — motor de preus, temporades, esmorzars, pressupost i calendari.
+- `README.md` — documentació.

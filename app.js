@@ -1,11 +1,12 @@
 /*
   ROCALLAURA · CALCULADORA D'ALLOTJAMENT
   --------------------------------------
-  Configuració principal:
-  - Alta fixa: 1 juny — 30 setembre
-  - Setmana Santa: dilluns de Setmana Santa — Dilluns de Pasqua
-  - Nadal/Reis: 24 desembre — 6 gener
-  - Dates especials: llista manual editable a SPECIAL_HIGH_RANGES
+  Aquesta versió manté intacte el motor de preus existent i afegeix:
+  - detall de tarifa base real de cada nit
+  - identificació de dates especials
+  - esmorzar opcional (6 € / persona / dia)
+  - pressupost copiable amb desglossament
+  - calendari visual de temporada baixa / alta / alta especial
 */
 
 const PRICING = {
@@ -13,42 +14,27 @@ const PRICING = {
     high: { weekday: 80, weekend: 90 },
     low: { weekday: 70, weekend: 80 }
   },
-  // 2–6 nits: dues corbes segons si tota l'estada és entre setmana
-  // o si inclou almenys una nit de divendres/dissabte.
-  durationLowBaseWeekday: {
-    2: 130,
-    3: 170,
-    4: 210,
-    5: 250,
-    6: 290
-  },
-  durationLowBaseStandard: {
+  durationLowBase: {
     2: 140,
     3: 180,
-    4: 220,
-    5: 260,
-    6: 300
+    4: 210,
+    5: 240,
+    6: 270
   },
   highNightPremiumFor2to6: 10,
-  week: { low: 330, high: 400 },
-  extraNight: { low: 40, high: 50 }
+  week: { low: 290, high: 350 },
+  extraNight: { low: 30, high: 40 },
+  breakfastPerPersonDay: 6
 };
 
 // Ponts/dates especials que volem tractar com a temporada alta.
 // Els rangs són inclusius. Es poden afegir o treure sense tocar el motor de càlcul.
 const SPECIAL_HIGH_RANGES = [
-  // 2026 · 1 de maig (divendres)
   { start: "2026-05-01", end: "2026-05-03", label: "Pont de l'1 de maig" },
-  // 2026 · 12 d'octubre (dilluns)
   { start: "2026-10-10", end: "2026-10-12", label: "Pont del 12 d'octubre" },
-  // 2026 · 8 de desembre (dimarts)
   { start: "2026-12-05", end: "2026-12-08", label: "Pont de desembre" },
-
-  // 2027 · 12 d'octubre (dimarts)
   { start: "2027-10-09", end: "2027-10-12", label: "Pont del 12 d'octubre" },
-  // 2027 · 1 de novembre (dilluns)
   { start: "2027-10-30", end: "2027-11-01", label: "Pont de Tots Sants" },
-  // 2027 · 6 i 8 de desembre (dilluns i dimecres)
   { start: "2027-12-04", end: "2027-12-08", label: "Pont de desembre" }
 ];
 
@@ -59,18 +45,35 @@ const els = {
   resultCard: document.querySelector('#resultCard'),
   seasonSummary: document.querySelector('#seasonSummary'),
   dateRange: document.querySelector('#dateRange'),
+  specialNotice: document.querySelector('#specialNotice'),
   totalPrice: document.querySelector('#totalPrice'),
+  totalComposition: document.querySelector('#totalComposition'),
   nightCount: document.querySelector('#nightCount'),
   averagePrice: document.querySelector('#averagePrice'),
+  breakfastEnabled: document.querySelector('#breakfastEnabled'),
+  breakfastControls: document.querySelector('#breakfastControls'),
+  breakfastPeople: document.querySelector('#breakfastPeople'),
+  breakfastDays: document.querySelector('#breakfastDays'),
+  breakfastPrice: document.querySelector('#breakfastPrice'),
   toggleBreakdown: document.querySelector('#toggleBreakdown'),
   breakdown: document.querySelector('#breakdown'),
   pricingExplanation: document.querySelector('#pricingExplanation'),
   nightList: document.querySelector('#nightList'),
   copyQuote: document.querySelector('#copyQuote'),
-  copyStatus: document.querySelector('#copyStatus')
+  copyStatus: document.querySelector('#copyStatus'),
+  calendarPrev: document.querySelector('#calendarPrev'),
+  calendarNext: document.querySelector('#calendarNext'),
+  calendarToday: document.querySelector('#calendarToday'),
+  calendarMonthLabel: document.querySelector('#calendarMonthLabel'),
+  calendarGrid: document.querySelector('#calendarGrid'),
+  calendarDayInfo: document.querySelector('#calendarDayInfo')
 };
 
 const DAY_MS = 86400000;
+let currentQuote = '';
+let currentStay = null;
+let breakfastDaysTouched = false;
+let calendarCursor = null;
 
 function parseISODate(value) {
   if (!value) return null;
@@ -99,7 +102,6 @@ function dateInRange(date, startISO, endISO) {
   return iso >= startISO && iso <= endISO;
 }
 
-// Meeus/Jones/Butcher: Pasqua gregoriana.
 function easterSunday(year) {
   const a = year % 19;
   const b = Math.floor(year / 100);
@@ -121,8 +123,8 @@ function easterSunday(year) {
 function easterHighRange(year) {
   const easter = easterSunday(year);
   return {
-    start: addDays(easter, -6), // dilluns de Setmana Santa
-    end: addDays(easter, 1)     // Dilluns de Pasqua
+    start: addDays(easter, -6),
+    end: addDays(easter, 1)
   };
 }
 
@@ -131,48 +133,52 @@ function getSeasonMeta(date) {
   const month = date.getUTCMonth() + 1;
   const day = date.getUTCDate();
 
-  // Alta fixa d'estiu
   if (month >= 6 && month <= 9) {
-    return { season: 'high', reason: 'Temporada alta d’estiu' };
+    return { season: 'high', reason: 'Temporada alta d’estiu', kind: 'high' };
   }
 
-  // Nadal i Reis (travessa canvi d'any)
   if ((month === 12 && day >= 24) || (month === 1 && day <= 6)) {
-    return { season: 'high', reason: 'Nadal i Reis' };
+    return { season: 'high', reason: 'Nadal i Reis', kind: 'high' };
   }
 
-  // Setmana Santa calculada automàticament cada any
   const easterRange = easterHighRange(year);
   if (date >= easterRange.start && date <= easterRange.end) {
-    return { season: 'high', reason: 'Setmana Santa' };
+    return { season: 'high', reason: 'Setmana Santa', kind: 'high' };
   }
 
-  // Ponts i dates especials manuals
   for (const range of SPECIAL_HIGH_RANGES) {
     if (dateInRange(date, range.start, range.end)) {
-      return { season: 'high', reason: range.label };
+      return { season: 'high', reason: range.label, kind: 'special' };
     }
   }
 
-  return { season: 'low', reason: 'Temporada baixa' };
+  return { season: 'low', reason: 'Temporada baixa', kind: 'low' };
 }
 
 function isWeekendNight(date) {
-  const day = date.getUTCDay(); // 0 dg ... 5 dv, 6 ds
+  const day = date.getUTCDay();
   return day === 5 || day === 6;
+}
+
+function getBaseNightPrice(night) {
+  const dayType = night.weekend ? 'weekend' : 'weekday';
+  return PRICING.oneNight[night.season][dayType];
 }
 
 function getNightDates(checkin, checkout) {
   const nights = [];
   for (let d = new Date(checkin); d < checkout; d = addDays(d, 1)) {
     const meta = getSeasonMeta(d);
-    nights.push({
+    const night = {
       date: d,
       iso: toISO(d),
       season: meta.season,
       reason: meta.reason,
+      kind: meta.kind,
       weekend: isWeekendNight(d)
-    });
+    };
+    night.basePrice = getBaseNightPrice(night);
+    nights.push(night);
   }
   return nights;
 }
@@ -201,38 +207,28 @@ function calculatePrice(nights) {
 
   if (count === 1) {
     const n = nights[0];
-    const dayType = n.weekend ? 'weekend' : 'weekday';
-    const price = PRICING.oneNight[n.season][dayType];
+    const price = n.basePrice;
     return {
       price,
       model: 'one-night',
       highCount,
       lowCount,
-      explanation: `1 nit · ${n.season === 'high' ? 'temporada alta' : 'temporada baixa'} · ${n.weekend ? 'divendres/dissabte' : 'entre setmana'}: ${price} €.`
+      explanation: `Tarifa d'1 nit aplicada: ${price} €.`
     };
   }
 
   if (count >= 2 && count <= 6) {
-    const allWeekday = nights.every(n => !n.weekend);
-    const lowBase = allWeekday
-      ? PRICING.durationLowBaseWeekday[count]
-      : PRICING.durationLowBaseStandard[count];
+    const lowBase = PRICING.durationLowBase[count];
     const premium = highCount * PRICING.highNightPremiumFor2to6;
     const price = lowBase + premium;
-    const tariffType = allWeekday ? 'tarifa entre setmana' : 'tarifa amb divendres/dissabte';
-
-    let explanation;
-    if (highCount === 0) {
-      explanation = `${count} nits · ${tariffType} · temporada baixa: ${lowBase} €.`;
-    } else if (highCount === count) {
-      explanation = `${count} nits · ${tariffType} · temporada alta: ${price} €.`;
-    } else {
-      explanation = `${count} nits · ${tariffType} · base baixa ${lowBase} € + ${highCount} ${highCount === 1 ? 'nit alta' : 'nits altes'} × 10 € = ${price} €.`;
-    }
-    return { price, model: allWeekday ? 'duration-weekday' : 'duration-standard', highCount, lowCount, explanation };
+    const explanation = highCount === 0
+      ? `${count} nits · tarifa especial de temporada baixa: ${lowBase} €.`
+      : highCount === count
+        ? `${count} nits · tarifa especial de temporada alta: ${price} €.`
+        : `${count} nits · tarifa especial mixta: base baixa ${lowBase} € + ${highCount} ${highCount === 1 ? 'nit alta' : 'nits altes'} × 10 € = ${price} €.`;
+    return { price, model: 'duration', highCount, lowCount, explanation };
   }
 
-  // 7 o més: una setmana + nits addicionals segons temporada.
   const firstWeek = nights.slice(0, 7);
   const extras = nights.slice(7);
   const week = calculateWeekPrice(firstWeek);
@@ -265,6 +261,9 @@ const fmtDateLong = new Intl.DateTimeFormat('ca-ES', {
 const fmtDateShort = new Intl.DateTimeFormat('ca-ES', {
   weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC'
 });
+const fmtMonthYear = new Intl.DateTimeFormat('ca-ES', {
+  month: 'long', year: 'numeric', timeZone: 'UTC'
+});
 const fmtNumber = new Intl.NumberFormat('ca-ES', { maximumFractionDigits: 2 });
 
 function seasonLabel(nights) {
@@ -274,39 +273,157 @@ function seasonLabel(nights) {
   return { text: `${high} alta · ${nights.length - high} baixa`, cls: 'mixed' };
 }
 
+function specialStayReasons(nights) {
+  return [...new Set(nights.filter(n => n.kind === 'special').map(n => n.reason))];
+}
+
+function standardBaseTotal(nights) {
+  return nights.reduce((sum, night) => sum + night.basePrice, 0);
+}
+
+function renderSpecialNotice(nights) {
+  const reasons = specialStayReasons(nights);
+  if (!reasons.length) {
+    els.specialNotice.hidden = true;
+    els.specialNotice.textContent = '';
+    return;
+  }
+
+  const specialNights = nights.filter(n => n.kind === 'special').length;
+  els.specialNotice.hidden = false;
+  els.specialNotice.innerHTML = `<strong>Inclou ${specialNights} ${specialNights === 1 ? 'nit en data especial' : 'nits en dates especials'}.</strong> ${reasons.join(' · ')}`;
+}
+
 function renderBreakdown(nights, calculation) {
-  els.pricingExplanation.textContent = calculation.explanation;
   els.nightList.innerHTML = '';
 
   nights.forEach((night, index) => {
     const row = document.createElement('div');
     row.className = 'night-row';
 
+    const main = document.createElement('div');
+    main.className = 'night-main';
+
     const date = document.createElement('div');
     date.className = 'night-date';
     date.textContent = `${index + 1}. ${fmtDateShort.format(night.date)}`;
 
+    const meta = document.createElement('div');
+    meta.className = 'night-meta';
+    const seasonText = night.season === 'high' ? 'Alta' : 'Baixa';
+    const dayType = night.weekend ? 'cap de setmana' : 'entre setmana';
+    meta.textContent = `${seasonText} · ${dayType}${night.kind === 'special' ? ` · ${night.reason}` : ''}`;
+
+    main.append(date, meta);
+
+    const right = document.createElement('div');
+    right.className = 'night-right';
+
+    const price = document.createElement('strong');
+    price.className = 'night-price';
+    price.textContent = `${night.basePrice} €`;
+
     const pill = document.createElement('span');
-    pill.className = `season-pill ${night.season}`;
-    pill.textContent = night.season === 'high' ? 'Alta' : 'Baixa';
+    pill.className = `season-pill ${night.kind === 'special' ? 'special' : night.season}`;
+    pill.textContent = night.kind === 'special' ? 'Alta especial' : seasonText;
     pill.title = night.reason;
 
-    row.append(date, pill);
+    right.append(price, pill);
+    row.append(main, right);
     els.nightList.appendChild(row);
   });
+
+  const baseTotal = standardBaseTotal(nights);
+  const hasSpecialTariff = calculation.price !== baseTotal;
+  const lines = [
+    `<div><span>Tarifa estàndard de les nits</span><strong>${fmtNumber.format(baseTotal)} €</strong></div>`
+  ];
+
+  if (hasSpecialTariff) {
+    lines.push(`<div class="special-rate"><span>Tarifa especial aplicada per l'estada</span><strong>${fmtNumber.format(calculation.price)} €</strong></div>`);
+  } else {
+    lines.push(`<div><span>Tarifa aplicada</span><strong>${fmtNumber.format(calculation.price)} €</strong></div>`);
+  }
+
+  lines.push(`<p>${calculation.explanation}</p>`);
+  els.pricingExplanation.innerHTML = lines.join('');
 }
 
-function buildQuote(checkin, checkout, nights, price) {
-  return [
+function getBreakfastData(nightCount) {
+  if (!els.breakfastEnabled.checked) {
+    return { enabled: false, people: 0, days: 0, price: 0 };
+  }
+
+  const people = Math.max(1, Number.parseInt(els.breakfastPeople.value, 10) || 1);
+  const days = Math.max(1, Math.min(365, Number.parseInt(els.breakfastDays.value, 10) || nightCount || 1));
+  const price = people * days * PRICING.breakfastPerPersonDay;
+  return { enabled: true, people, days, price };
+}
+
+function buildQuote(checkin, checkout, nights, calculation, breakfast) {
+  const baseTotal = standardBaseTotal(nights);
+  const lines = [
     'Bungalow Rocallaura',
     `Entrada: ${fmtDateLong.format(checkin)}`,
     `Sortida: ${fmtDateLong.format(checkout)}`,
     `${nights.length} ${nights.length === 1 ? 'nit' : 'nits'}`,
-    `Preu orientatiu: ${fmtNumber.format(price)} €`
-  ].join('\n');
+    '',
+    'Tarifes que intervenen:'
+  ];
+
+  nights.forEach(night => {
+    const seasonText = night.kind === 'special'
+      ? `alta especial · ${night.reason}`
+      : night.season === 'high' ? 'alta' : 'baixa';
+    const dayType = night.weekend ? 'cap de setmana' : 'entre setmana';
+    lines.push(`${fmtDateShort.format(night.date)} · ${seasonText} · ${dayType} → ${night.basePrice} €`);
+  });
+
+  lines.push('', `Tarifa estàndard total: ${fmtNumber.format(baseTotal)} €`);
+  if (calculation.price !== baseTotal) {
+    lines.push(`Tarifa especial per l'estada: ${fmtNumber.format(calculation.price)} €`);
+  }
+  lines.push(`Total allotjament: ${fmtNumber.format(calculation.price)} €`);
+
+  if (breakfast.enabled) {
+    lines.push(
+      '',
+      `Esmorzar: ${PRICING.breakfastPerPersonDay} € / persona / dia`,
+      `${breakfast.people} ${breakfast.people === 1 ? 'persona' : 'persones'} × ${breakfast.days} ${breakfast.days === 1 ? 'dia' : 'dies'} = ${fmtNumber.format(breakfast.price)} €`,
+      `Total estada amb esmorzar: ${fmtNumber.format(calculation.price + breakfast.price)} €`
+    );
+  } else {
+    lines.push('', `Total estada: ${fmtNumber.format(calculation.price)} €`);
+  }
+
+  return lines.join('\n');
 }
 
-let currentQuote = '';
+function syncBreakfastDays(nightCount, force = false) {
+  if (force || !breakfastDaysTouched) {
+    els.breakfastDays.value = String(Math.max(1, nightCount));
+  }
+}
+
+function renderTotals(calculation, nights) {
+  const breakfast = getBreakfastData(nights.length);
+  const total = calculation.price + breakfast.price;
+
+  els.totalPrice.textContent = `${fmtNumber.format(total)} €`;
+  els.nightCount.textContent = String(nights.length);
+  els.averagePrice.textContent = `${fmtNumber.format(calculation.price / nights.length)} €`;
+  els.breakfastPrice.textContent = `${fmtNumber.format(breakfast.price)} €`;
+
+  if (breakfast.enabled) {
+    els.totalComposition.hidden = false;
+    els.totalComposition.textContent = `Allotjament ${fmtNumber.format(calculation.price)} € + esmorzars ${fmtNumber.format(breakfast.price)} €`;
+  } else {
+    els.totalComposition.hidden = true;
+    els.totalComposition.textContent = '';
+  }
+
+  return breakfast;
+}
 
 function update() {
   const checkin = parseISODate(els.checkin.value);
@@ -316,6 +433,8 @@ function update() {
 
   if (!checkin || !checkout) {
     els.resultCard.hidden = true;
+    currentStay = null;
+    currentQuote = '';
     return;
   }
 
@@ -324,6 +443,8 @@ function update() {
     els.resultCard.hidden = true;
     els.formError.textContent = 'La data de sortida ha de ser posterior a la d’entrada.';
     els.formError.hidden = false;
+    currentStay = null;
+    currentQuote = '';
     return;
   }
 
@@ -331,16 +452,103 @@ function update() {
   const calculation = calculatePrice(nights);
   const season = seasonLabel(nights);
 
+  syncBreakfastDays(nights.length);
+
   els.resultCard.hidden = false;
   els.seasonSummary.className = `season-summary ${season.cls}`;
   els.seasonSummary.textContent = season.text;
   els.dateRange.textContent = `${fmtDateShort.format(checkin)} → ${fmtDateShort.format(checkout)}`;
-  els.totalPrice.textContent = `${fmtNumber.format(calculation.price)} €`;
-  els.nightCount.textContent = String(nights.length);
-  els.averagePrice.textContent = `${fmtNumber.format(calculation.price / nights.length)} €`;
+  renderSpecialNotice(nights);
   renderBreakdown(nights, calculation);
+  const breakfast = renderTotals(calculation, nights);
 
-  currentQuote = buildQuote(checkin, checkout, nights, calculation.price);
+  currentStay = { checkin, checkout, nights, calculation };
+  currentQuote = buildQuote(checkin, checkout, nights, calculation, breakfast);
+
+  calendarCursor = new Date(Date.UTC(checkin.getUTCFullYear(), checkin.getUTCMonth(), 1));
+  renderCalendar();
+}
+
+function refreshExtrasOnly() {
+  if (!currentStay) return;
+  const breakfast = renderTotals(currentStay.calculation, currentStay.nights);
+  currentQuote = buildQuote(
+    currentStay.checkin,
+    currentStay.checkout,
+    currentStay.nights,
+    currentStay.calculation,
+    breakfast
+  );
+}
+
+function monthStart(date) {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1));
+}
+
+function moveMonth(date, amount) {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + amount, 1));
+}
+
+function localTodayUTC() {
+  const today = new Date();
+  return new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+}
+
+function calendarClass(meta) {
+  if (meta.kind === 'special') return 'special';
+  return meta.season === 'high' ? 'high' : 'low';
+}
+
+function renderCalendar() {
+  if (!calendarCursor) calendarCursor = monthStart(localTodayUTC());
+  calendarCursor = monthStart(calendarCursor);
+  els.calendarMonthLabel.textContent = fmtMonthYear.format(calendarCursor);
+  els.calendarGrid.innerHTML = '';
+
+  const year = calendarCursor.getUTCFullYear();
+  const month = calendarCursor.getUTCMonth();
+  const firstDay = new Date(Date.UTC(year, month, 1));
+  const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+  const mondayOffset = (firstDay.getUTCDay() + 6) % 7;
+  const todayISO = toISO(localTodayUTC());
+  const selectedStart = els.checkin.value || null;
+  const selectedEnd = els.checkout.value || null;
+
+  for (let i = 0; i < mondayOffset; i += 1) {
+    const blank = document.createElement('span');
+    blank.className = 'calendar-blank';
+    els.calendarGrid.appendChild(blank);
+  }
+
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    const date = new Date(Date.UTC(year, month, day));
+    const iso = toISO(date);
+    const meta = getSeasonMeta(date);
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `calendar-day ${calendarClass(meta)}`;
+    button.textContent = String(day);
+    button.dataset.iso = iso;
+    button.setAttribute('role', 'gridcell');
+    button.setAttribute('aria-label', `${fmtDateLong.format(date)} · ${meta.reason}`);
+
+    if (iso === todayISO) button.classList.add('today');
+    if (selectedStart && selectedEnd && iso >= selectedStart && iso < selectedEnd) {
+      button.classList.add('in-stay');
+    }
+    if (meta.kind === 'special') button.title = meta.reason;
+
+    button.addEventListener('click', () => {
+      document.querySelectorAll('.calendar-day.selected').forEach(el => el.classList.remove('selected'));
+      button.classList.add('selected');
+      const label = meta.kind === 'special'
+        ? `Alta especial · ${meta.reason}`
+        : meta.season === 'high' ? `Temporada alta · ${meta.reason}` : 'Temporada baixa';
+      els.calendarDayInfo.innerHTML = `<strong>${fmtDateLong.format(date)}</strong><span>${label}</span>`;
+    });
+
+    els.calendarGrid.appendChild(button);
+  }
 }
 
 els.checkin.addEventListener('change', () => {
@@ -348,9 +556,28 @@ els.checkin.addEventListener('change', () => {
     const start = parseISODate(els.checkin.value);
     els.checkout.value = toISO(addDays(start, 1));
   }
+  breakfastDaysTouched = false;
   update();
 });
-els.checkout.addEventListener('change', update);
+
+els.checkout.addEventListener('change', () => {
+  breakfastDaysTouched = false;
+  update();
+});
+
+els.breakfastEnabled.addEventListener('change', () => {
+  els.breakfastControls.hidden = !els.breakfastEnabled.checked;
+  if (els.breakfastEnabled.checked && currentStay) {
+    syncBreakfastDays(currentStay.nights.length, true);
+  }
+  refreshExtrasOnly();
+});
+
+els.breakfastPeople.addEventListener('input', refreshExtrasOnly);
+els.breakfastDays.addEventListener('input', () => {
+  breakfastDaysTouched = true;
+  refreshExtrasOnly();
+});
 
 els.toggleBreakdown.addEventListener('click', () => {
   const open = els.toggleBreakdown.getAttribute('aria-expanded') === 'true';
@@ -374,11 +601,26 @@ els.copyQuote.addEventListener('click', async () => {
   }
 });
 
-// Valors inicials: avui + demà, en data local del navegador.
+els.calendarPrev.addEventListener('click', () => {
+  calendarCursor = moveMonth(calendarCursor, -1);
+  renderCalendar();
+});
+
+els.calendarNext.addEventListener('click', () => {
+  calendarCursor = moveMonth(calendarCursor, 1);
+  renderCalendar();
+});
+
+els.calendarToday.addEventListener('click', () => {
+  calendarCursor = monthStart(localTodayUTC());
+  renderCalendar();
+});
+
 (function init() {
-  const today = new Date();
-  const localToday = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
-  els.checkin.value = toISO(localToday);
-  els.checkout.value = toISO(addDays(localToday, 1));
+  const today = localTodayUTC();
+  els.checkin.value = toISO(today);
+  els.checkout.value = toISO(addDays(today, 1));
+  calendarCursor = monthStart(today);
+  renderCalendar();
   update();
 })();
