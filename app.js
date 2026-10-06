@@ -365,7 +365,7 @@ function renderSpecialNotice(nights) {
   els.dateSpecialNotice.hidden = false;
 }
 
-function renderNightBreakdown(nights, calc, basePerBungalow, lodgingTotal) {
+function renderNightBreakdown(nights, calc, basePerBungalow, lodgingTotal, breakfast, grandTotal) {
   els.nightList.innerHTML = nights.map(night => {
     const seasonText = night.kind === 'special'
       ? `Alta especial · ${night.reason}`
@@ -388,9 +388,15 @@ function renderNightBreakdown(nights, calc, basePerBungalow, lodgingTotal) {
     `;
   }).join('');
 
+  const breakfastLine = breakfast.enabled
+    ? `<div><span>Esmorzar · ${breakfast.people} ${breakfast.people === 1 ? 'persona' : 'persones'} × ${breakfast.days} ${breakfast.days === 1 ? 'dia' : 'dies'} × ${PRICING.breakfastPerPersonDay} €</span><strong>${breakfast.price} €</strong></div>`
+    : '';
+
   els.pricingExplanation.innerHTML = `
     <div><span>Total / bungalow</span><strong>${basePerBungalow} €</strong></div>
     <div><span>${bungalowCount} ${bungalowCount === 1 ? 'bungalow' : 'bungalows'}</span><strong>${lodgingTotal} € allotjament</strong></div>
+    ${breakfastLine}
+    <div class="pricing-grand-total"><span>Total orientatiu</span><strong>${grandTotal} €</strong></div>
     ${bungalowCount > 1 ? `<p>El total per bungalow es multiplica per ${bungalowCount}.</p>` : ''}
   `;
 }
@@ -497,7 +503,7 @@ function recalculate() {
   }
 
   renderSpecialNotice(nights);
-  renderNightBreakdown(nights, calc, basePerBungalow, lodgingTotal);
+  renderNightBreakdown(nights, calc, basePerBungalow, lodgingTotal, breakfast, grandTotal);
   updateBreakfastControls(nights.length);
   currentQuote = buildQuote(nights, calc, basePerBungalow, lodgingTotal, breakfast, grandTotal);
   els.resultCard.hidden = false;

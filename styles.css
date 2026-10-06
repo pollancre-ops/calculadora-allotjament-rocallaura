@@ -294,3 +294,11 @@ footer { padding: 14px 4px 0; color: var(--muted); font-size: .72rem; text-align
 @media (prefers-reduced-motion: reduce) {
   * { scroll-behavior: auto !important; transition: none !important; }
 }
+.pricing-explanation .pricing-grand-total {
+  margin-top: 7px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  color: var(--text);
+  font-size: .86rem;
+}
+.pricing-explanation .pricing-grand-total strong { font-size: .95rem; }
