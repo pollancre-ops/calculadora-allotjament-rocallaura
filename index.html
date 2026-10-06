@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#1f2a24" />
   <title>Rocallaura · Calculadora d'allotjament</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=20261006-3" />
 </head>
 <body>
   <main class="shell">
@@ -37,6 +37,7 @@
         </label>
       </div>
       <p class="helper">La sortida no compta com a nit d'allotjament.</p>
+      <div id="dateSpecialNotice" class="date-special-notice" hidden></div>
       <div id="formError" class="error" role="alert" hidden></div>
     </section>
 
@@ -45,8 +46,6 @@
         <span id="seasonSummary" class="season-summary">—</span>
         <span id="dateRange" class="date-range">—</span>
       </div>
-
-      <div id="specialNotice" class="special-notice" hidden></div>
 
       <div class="price-block">
         <span class="price-label">Total orientatiu</span>
@@ -73,21 +72,17 @@
           <input id="breakfastEnabled" type="checkbox" />
           <span>
             <strong>Afegir esmorzar</strong>
-            <small>6 € per persona i dia</small>
+            <small>6 € per persona i dia · tants dies com nits reservades</small>
           </span>
         </label>
 
         <div id="breakfastControls" class="breakfast-controls" hidden>
           <label class="field compact-field">
             <span>Persones</span>
-            <input id="breakfastPeople" type="number" min="1" max="12" step="1" value="2" inputmode="numeric" />
-          </label>
-          <label class="field compact-field">
-            <span>Dies d'esmorzar</span>
-            <input id="breakfastDays" type="number" min="1" max="365" step="1" value="1" inputmode="numeric" />
+            <input id="breakfastPeople" type="number" min="1" max="5" step="1" value="2" inputmode="numeric" />
           </label>
           <div class="breakfast-total">
-            <span>Esmorzars</span>
+            <span id="breakfastFormula">—</span>
             <strong id="breakfastPrice">0 €</strong>
           </div>
         </div>
@@ -123,15 +118,21 @@
       </div>
 
       <div class="calendar-legend" aria-label="Llegenda del calendari">
-        <span><i class="legend-dot low"></i>Baixa</span>
-        <span><i class="legend-dot high"></i>Alta</span>
-        <span><i class="legend-dot special"></i>Alta especial</span>
+        <span><i class="legend-swatch low"></i>Baixa</span>
+        <span><i class="legend-swatch high"></i>Alta</span>
+        <span><i class="legend-swatch special"></i>Alta especial</span>
       </div>
 
       <div class="calendar-weekdays" aria-hidden="true">
         <span>Dl</span><span>Dt</span><span>Dc</span><span>Dj</span><span>Dv</span><span>Ds</span><span>Dg</span>
       </div>
       <div id="calendarGrid" class="calendar-grid" role="grid" aria-label="Calendari de temporades"></div>
+
+      <div id="calendarSpecials" class="calendar-specials" hidden>
+        <strong>Dates especials del mes</strong>
+        <div id="calendarSpecialList" class="calendar-special-list"></div>
+      </div>
+
       <div id="calendarDayInfo" class="calendar-day-info">Toca un dia per veure'n la temporada.</div>
     </section>
 
@@ -171,7 +172,14 @@
         </div>
       </div>
 
-      <p class="rules-note">Les estades de més d'una nit poden aplicar una tarifa especial per durada. El detall del càlcul mostra sempre les tarifes base que intervenen i la tarifa especial final aplicada.</p>
+      <div class="duration-summary">
+        <h3>Escalat per durada</h3>
+        <p><strong>2–6 nits:</strong> tarifa especial segons durada, temporada i si l'estada inclou divendres o dissabte.</p>
+        <p><strong>7 nits:</strong> 400 € alta · 330 € baixa.</p>
+        <p><strong>Més de 7 nits:</strong> +50 € per nit alta · +40 € per nit baixa.</p>
+      </div>
+
+      <p class="rules-note">El detall del càlcul mostra sempre la tarifa base de cada nit i, quan correspon, la tarifa especial final aplicada a l'estada.</p>
     </section>
 
     <footer>
@@ -179,6 +187,6 @@
     </footer>
   </main>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=20261006-3"></script>
 </body>
 </html>
