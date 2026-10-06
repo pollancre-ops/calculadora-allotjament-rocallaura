@@ -4,28 +4,16 @@
   - Selector d'entrada/sortida directament sobre el calendari
   - 1–4 bungalows
   - temporada baixa / alta / alta especial
-  - etiquetes de dates especials dins del calendari
-  - detall de tarifa base de cada nit
+  - preu calculat nit a nit, sense paquets ni escalats
   - esmorzar opcional a 6 € / persona / dia
   - pressupost copiable
 */
 
 const PRICING = {
-  oneNight: {
+  nightly: {
     high: { weekday: 80, weekend: 90 },
     low: { weekday: 70, weekend: 80 }
   },
-  durationLow: {
-    2: { weekdayOnly: 130, withWeekend: 140 },
-    3: { weekdayOnly: 170, withWeekend: 180 },
-    4: { weekdayOnly: 210, withWeekend: 220 },
-    5: { weekdayOnly: 250, withWeekend: 260 },
-    6: { weekdayOnly: 290, withWeekend: 300 }
-  },
-  highNightPremiumFor2to7: 10,
-  weekLow: 330,
-  weekHigh: 400,
-  extraNight: { low: 40, high: 50 },
   breakfastPerPersonDay: 6,
   maxBungalows: 4,
   maxPeoplePerBungalow: 5
@@ -34,7 +22,7 @@ const PRICING = {
 // Rangs especials tractats com a temporada alta. Els extrems són inclusius.
 const SPECIAL_HIGH_RANGES = [
   { start: '2026-05-01', end: '2026-05-03', label: "Pont de l'1 de maig", shortLabel: 'Pont 1 maig' },
-  { start: '2026-10-10', end: '2026-10-12', label: "Pont del 12 d'octubre", shortLabel: 'Pont 12 oct.' },
+  { start: '2026-10-09', end: '2026-10-12', label: "Pont del 12 d'octubre", shortLabel: 'Pont 12 oct.' },
   { start: '2026-12-05', end: '2026-12-08', label: 'Pont de desembre', shortLabel: 'Pont des.' },
   { start: '2027-10-09', end: '2027-10-12', label: "Pont del 12 d'octubre", shortLabel: 'Pont 12 oct.' },
   { start: '2027-10-30', end: '2027-11-01', label: 'Pont de Tots Sants', shortLabel: 'Tots Sants' },
@@ -202,7 +190,7 @@ function isWeekendNight(date) {
 
 function getBaseNightPrice(night) {
   const type = night.weekend ? 'weekend' : 'weekday';
-  return PRICING.oneNight[night.season][type];
+  return PRICING.nightly[night.season][type];
 }
 
 function getNightDates(checkin, checkout) {
@@ -225,71 +213,18 @@ function getNightDates(checkin, checkout) {
 }
 
 function calculatePricePerBungalow(nights) {
-  const count = nights.length;
+  const price = nights.reduce((sum, night) => sum + night.basePrice, 0);
   const highCount = nights.filter(n => n.season === 'high').length;
-  const lowCount = count - highCount;
+  const lowCount = nights.length - highCount;
   const includesWeekend = nights.some(n => n.weekend);
-
-  if (count === 1) {
-    const price = nights[0].basePrice;
-    return {
-      price,
-      model: 'one-night',
-      highCount,
-      lowCount,
-      includesWeekend,
-      explanation: `Tarifa d'1 nit: ${price} € per bungalow.`
-    };
-  }
-
-  if (count >= 2 && count <= 6) {
-    const band = includesWeekend ? 'withWeekend' : 'weekdayOnly';
-    const lowBase = PRICING.durationLow[count][band];
-    const price = lowBase + highCount * PRICING.highNightPremiumFor2to7;
-
-    let explanation = `${count} nits · tarifa especial ${includesWeekend ? 'amb divendres/dissabte' : 'entre setmana'}`;
-    if (highCount === 0) {
-      explanation += ` · baixa: ${price} € per bungalow.`;
-    } else if (highCount === count) {
-      explanation += ` · alta: ${price} € per bungalow.`;
-    } else {
-      explanation += ` · base baixa ${lowBase} € + ${highCount} ${highCount === 1 ? 'nit alta' : 'nits altes'} × 10 € = ${price} € per bungalow.`;
-    }
-
-    return { price, model: 'duration', highCount, lowCount, includesWeekend, explanation };
-  }
-
-  const firstWeek = nights.slice(0, 7);
-  const weekHighCount = firstWeek.filter(n => n.season === 'high').length;
-  const weekPrice = PRICING.weekLow + weekHighCount * PRICING.highNightPremiumFor2to7;
-
-  const extras = nights.slice(7);
-  const extraHigh = extras.filter(n => n.season === 'high').length;
-  const extraLow = extras.length - extraHigh;
-  const extrasPrice = extraHigh * PRICING.extraNight.high + extraLow * PRICING.extraNight.low;
-  const price = weekPrice + extrasPrice;
-
-  let explanation = `Primera setmana: ${weekPrice} € per bungalow`;
-  if (weekHighCount === 0) explanation += ' (baixa)';
-  else if (weekHighCount === 7) explanation += ' (alta)';
-  else explanation += ` (${weekHighCount} ${weekHighCount === 1 ? 'nit alta' : 'nits altes'} + ${7 - weekHighCount} ${7 - weekHighCount === 1 ? 'nit baixa' : 'nits baixes'})`;
-
-  if (extras.length) {
-    const parts = [];
-    if (extraHigh) parts.push(`${extraHigh} × ${PRICING.extraNight.high} € alta`);
-    if (extraLow) parts.push(`${extraLow} × ${PRICING.extraNight.low} € baixa`);
-    explanation += ` + nits addicionals: ${parts.join(' + ')} = ${price} € per bungalow.`;
-  } else {
-    explanation += '.';
-  }
 
   return {
     price,
-    model: 'week-plus',
+    model: 'nightly',
     highCount,
     lowCount,
-    includesWeekend: true,
-    explanation
+    includesWeekend,
+    explanation: `Suma directa de les ${nights.length} ${nights.length === 1 ? 'nit' : 'nits'} segons temporada i dia de la setmana.`
   };
 }
 
@@ -453,15 +388,10 @@ function renderNightBreakdown(nights, calc, basePerBungalow, lodgingTotal) {
     `;
   }).join('');
 
-  const baseAllBungalows = basePerBungalow * bungalowCount;
-  const hasSpecialRate = calc.price !== basePerBungalow;
-
   els.pricingExplanation.innerHTML = `
-    <div><span>Tarifa estàndard / bungalow</span><strong>${basePerBungalow} €</strong></div>
-    ${hasSpecialRate ? `<div class="special-rate"><span>Tarifa especial aplicada / bungalow</span><strong>${calc.price} €</strong></div>` : ''}
+    <div><span>Total / bungalow</span><strong>${basePerBungalow} €</strong></div>
     <div><span>${bungalowCount} ${bungalowCount === 1 ? 'bungalow' : 'bungalows'}</span><strong>${lodgingTotal} € allotjament</strong></div>
-    ${bungalowCount > 1 ? `<p>La tarifa de l'estada es calcula per bungalow i després es multiplica per ${bungalowCount}.</p>` : ''}
-    ${hasSpecialRate ? `<p>Les tarifes de cada nit són les tarifes base. El total final aplica l'escalat especial per durada de l'estada.</p>` : ''}
+    ${bungalowCount > 1 ? `<p>El total per bungalow es multiplica per ${bungalowCount}.</p>` : ''}
   `;
 }
 

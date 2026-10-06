@@ -15,7 +15,7 @@ No utilitza base de dades, login, cookies ni dependències externes.
 
 ## Selecció de dates
 
-L'entrada i la sortida es trien **en un únic calendari**, sense camps de data separats:
+L'entrada i la sortida es trien en **un únic calendari**:
 
 1. primer clic/toc: entrada
 2. segon clic/toc: sortida
@@ -23,49 +23,24 @@ L'entrada i la sortida es trien **en un únic calendari**, sense camps de data s
 
 La data de sortida no compta com a nit.
 
-Si ja hi ha una estada completa seleccionada, tocar un altre dia inicia una selecció nova.
-
 ## Bungalows
 
-El selector de bungalows apareix just sota el calendari i comença sempre amb **1 bungalow** per defecte. Es poden calcular simultàniament entre **1 i 4 bungalows**.
-
-La tarifa de l'estada es calcula **per bungalow** i després es multiplica pel nombre d'unitats seleccionades.
+El selector apareix sota el calendari i comença amb **1 bungalow** per defecte. Es poden calcular entre **1 i 4 bungalows**.
 
 ## Pricing vigent
 
-### 1 nit
+No hi ha paquets, escalats ni descomptes automàtics per durada. **Cada nit es calcula individualment** i després se sumen totes les nits.
 
-| Temporada | Entre setmana | Divendres / dissabte |
+| Temporada | Entre setmana (dg.–dj.) | Divendres / dissabte |
 |---|---:|---:|
-| Alta | 80 € | 90 € |
-| Baixa | 70 € | 80 € |
+| Alta | 80 € / nit | 90 € / nit |
+| Baixa | 70 € / nit | 80 € / nit |
 
-### 2–6 nits
+El total d'allotjament és:
 
-| Nits | Alta entre setmana | Alta inclou dv./ds. | Baixa entre setmana | Baixa inclou dv./ds. |
-|---:|---:|---:|---:|---:|
-| 2 | 150 € | 160 € | 130 € | 140 € |
-| 3 | 200 € | 210 € | 170 € | 180 € |
-| 4 | 250 € | 260 € | 210 € | 220 € |
-| 5 | 300 € | 310 € | 250 € | 260 € |
-| 6 | 350 € | 360 € | 290 € | 300 € |
+`Suma de totes les nits × nombre de bungalows`
 
-Per a estades que barregen alta i baixa:
-
-- es pren la tarifa de baixa corresponent a la durada;
-- es diferencia si l'estada inclou divendres/dissabte o és íntegrament entre setmana;
-- s'afegeixen **10 € per cada nit d'alta**.
-
-### 7 nits
-
-- 100% baixa: **330 €**
-- 100% alta: **400 €**
-- mixta: **330 € + 10 € per cada nit d'alta**
-
-### Més de 7 nits
-
-- primera setmana segons la regla anterior;
-- nits posteriors: **+50 € per nit alta** i **+40 € per nit baixa**.
+Això també resol automàticament les estades que barregen temporada alta i baixa: cada nit conserva la seva tarifa real.
 
 ## Temporades
 
@@ -79,13 +54,9 @@ Per a estades que barregen alta i baixa:
 
 Ponts i dates puntuals configurats manualment a `SPECIAL_HIGH_RANGES` dins de `app.js`.
 
-Exemple:
+Per exemple, el Pont del 12 d'octubre de 2026 està configurat del **9 al 12 d'octubre** perquè la nit de divendres 9 formi part de l'estada del pont.
 
-```js
-{ start: '2026-10-10', end: '2026-10-12', label: "Pont del 12 d'octubre", shortLabel: 'Pont 12 oct.' }
-```
-
-Les dates especials tenen prioritat visual sobre la resta de regles d'alta.
+Les dates especials tenen prioritat visual i tarifària i es cobren com a temporada alta.
 
 ## Calendari
 
@@ -95,13 +66,7 @@ El calendari és alhora:
 - orientació de temporada baixa / alta / alta especial;
 - informació de dates especials.
 
-Les dates especials mostren **el motiu directament dins de la casella del dia**, sense haver de tocar-les.
-
-Setmana Santa i Nadal/Reis també mostren una etiqueta curta al calendari.
-
-## Avís de dates especials
-
-Si l'interval seleccionat inclou una data especial, apareix un avís immediat sota el calendari amb la data i el motiu.
+Les dates especials mostren el motiu directament dins de la casella del dia.
 
 ## Veure càlcul
 
@@ -111,16 +76,9 @@ Per cada nit es mostra:
 - temporada;
 - entre setmana o cap de setmana;
 - motiu si és una data especial;
-- **tarifa base real en €/nit**.
+- tarifa real en €/nit.
 
-Després es mostra:
-
-- suma de tarifes estàndard per bungalow;
-- tarifa especial per durada, si correspon;
-- nombre de bungalows;
-- total d'allotjament.
-
-No es reparteix artificialment el preu especial entre les nits.
+El total és la suma directa d'aquestes tarifes.
 
 ## Esmorzars
 
@@ -130,11 +88,9 @@ No es reparteix artificialment el preu especial entre les nits.
 - només s'indica el nombre de persones;
 - màxim: **5 persones per bungalow**.
 
-Per exemple, amb 2 bungalows el selector permet fins a 10 persones.
-
 ## Pressupost copiat
 
-El botó `Copiar pressupost` genera un text breu pensat per enviar directament al client. Inclou només:
+El botó `Copiar pressupost` genera un text breu amb:
 
 - dates de l'estada;
 - nombre de nits i bungalows;
@@ -142,7 +98,7 @@ El botó `Copiar pressupost` genera un text breu pensat per enviar directament a
 - esmorzars, si s'han activat;
 - total orientatiu final.
 
-El detall intern de tarifes per nit i de l'escalat no es copia al pressupost.
+No inclou el detall intern del càlcul nit a nit.
 
 ## Fitxers
 
