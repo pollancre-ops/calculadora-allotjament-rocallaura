@@ -49,8 +49,7 @@ const els = {
   calendarToday: document.querySelector('#calendarToday'),
   calendarMonthLabel: document.querySelector('#calendarMonthLabel'),
   calendarGrid: document.querySelector('#calendarGrid'),
-  selectedCheckin: document.querySelector('#selectedCheckin'),
-  selectedCheckout: document.querySelector('#selectedCheckout'),
+  selectionSummary: document.querySelector('#selectionSummary'),
   selectionHint: document.querySelector('#selectionHint'),
   clearDates: document.querySelector('#clearDates'),
   dateSpecialNotice: document.querySelector('#dateSpecialNotice'),
@@ -399,23 +398,20 @@ function updateSelectionUI() {
   els.clearDates.hidden = !selectionStart;
 
   if (!selectionStart) {
-    els.selectedCheckin.textContent = 'Selecciona un dia';
-    els.selectedCheckout.textContent = '—';
-    els.selectionHint.textContent = "Toca el dia d'entrada i després el dia de sortida.";
+    els.selectionSummary.textContent = 'Selecciona entrada i sortida al calendari';
+    els.selectionHint.textContent = 'Primer toc: entrada · segon toc: sortida.';
     return;
   }
 
-  els.selectedCheckin.textContent = fmtDateCompact.format(selectionStart);
-
   if (!selectionEnd) {
-    els.selectedCheckout.textContent = 'Selecciona sortida';
-    els.selectionHint.textContent = "Entrada seleccionada. Ara toca el dia de sortida.";
+    els.selectionSummary.textContent = `Entrada: ${fmtDateCompact.format(selectionStart)}`;
+    els.selectionHint.textContent = 'Ara toca al mateix calendari el dia de sortida.';
     return;
   }
 
   const nights = daysBetween(selectionStart, selectionEnd);
-  els.selectedCheckout.textContent = fmtDateCompact.format(selectionEnd);
-  els.selectionHint.textContent = `${nights} ${nights === 1 ? 'nit' : 'nits'} · la data de sortida no compta com a nit.`;
+  els.selectionSummary.textContent = `${fmtDateCompact.format(selectionStart)} → ${fmtDateCompact.format(selectionEnd)} · ${nights} ${nights === 1 ? 'nit' : 'nits'}`;
+  els.selectionHint.textContent = 'Per canviar l’estada, toca una nova data d’entrada o prem “Netejar dates”.';
 }
 
 function renderSpecialNotice(nights) {
@@ -509,34 +505,18 @@ function updateBreakfastControls(nightCount = currentStay?.nights.length || 0) {
 
 function buildQuote(nights, calc, basePerBungalow, lodgingTotal, breakfast, grandTotal) {
   const lines = [
-    'Bungalow Rocallaura',
+    'Rocallaura · Bungalows',
     `${fmtDateLong.format(selectionStart)} – ${fmtDateLong.format(selectionEnd)}`,
     `${nights.length} ${nights.length === 1 ? 'nit' : 'nits'} · ${bungalowCount} ${bungalowCount === 1 ? 'bungalow' : 'bungalows'}`,
     '',
-    'Tarifes base per bungalow que intervenen:'
+    `Allotjament: ${lodgingTotal} €`
   ];
 
-  nights.forEach(night => {
-    const type = night.kind === 'special'
-      ? `alta especial · ${night.reason}`
-      : `${night.season === 'high' ? 'alta' : 'baixa'} · ${night.weekend ? 'cap de setmana' : 'entre setmana'}${night.kind === 'high' && night.reason !== 'Temporada alta' ? ` · ${night.reason}` : ''}`;
-    lines.push(`• ${fmtDateShort.format(night.date)} · ${type} → ${night.basePrice} €/nit`);
-  });
-
-  lines.push('', `Tarifa estàndard / bungalow: ${basePerBungalow} €`);
-  if (calc.price !== basePerBungalow) {
-    lines.push(`Tarifa especial aplicada per l'estada: ${calc.price} € / bungalow`);
-  }
-  if (bungalowCount > 1) {
-    lines.push(`${calc.price} € × ${bungalowCount} bungalows = ${lodgingTotal} €`);
-  }
-  lines.push(`Allotjament: ${lodgingTotal} €`);
-
   if (breakfast.enabled) {
-    lines.push(`Esmorzar: ${breakfast.people} persones × ${breakfast.days} dies × ${PRICING.breakfastPerPersonDay} € = ${breakfast.price} €`);
+    lines.push(`Esmorzar: ${breakfast.price} € (${breakfast.people} ${breakfast.people === 1 ? 'persona' : 'persones'} × ${breakfast.days} ${breakfast.days === 1 ? 'dia' : 'dies'})`);
   }
 
-  lines.push('', `TOTAL ORIENTATIU: ${grandTotal} €`);
+  lines.push('', `Total orientatiu: ${grandTotal} €`);
   return lines.join('\n');
 }
 

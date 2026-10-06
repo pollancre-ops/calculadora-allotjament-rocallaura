@@ -15,7 +15,7 @@ No utilitza base de dades, login, cookies ni dependències externes.
 
 ## Selecció de dates
 
-L'entrada i la sortida es trien directament al calendari:
+L'entrada i la sortida es trien **en un únic calendari**, sense camps de data separats:
 
 1. primer clic/toc: entrada
 2. segon clic/toc: sortida
@@ -27,7 +27,7 @@ Si ja hi ha una estada completa seleccionada, tocar un altre dia inicia una sele
 
 ## Bungalows
 
-Es poden calcular simultàniament entre **1 i 4 bungalows**.
+El selector de bungalows apareix just sota el calendari i comença sempre amb **1 bungalow** per defecte. Es poden calcular simultàniament entre **1 i 4 bungalows**.
 
 La tarifa de l'estada es calcula **per bungalow** i després es multiplica pel nombre d'unitats seleccionades.
 
@@ -134,18 +134,15 @@ Per exemple, amb 2 bungalows el selector permet fins a 10 persones.
 
 ## Pressupost copiat
 
-El botó `Copiar pressupost` inclou:
+El botó `Copiar pressupost` genera un text breu pensat per enviar directament al client. Inclou només:
 
-- dates;
-- nombre de nits;
-- nombre de bungalows;
-- tarifa base de cada nit;
-- motiu de dates especials;
-- tarifa estàndard per bungalow;
-- tarifa especial aplicada, si correspon;
+- dates de l'estada;
+- nombre de nits i bungalows;
 - total d'allotjament;
 - esmorzars, si s'han activat;
 - total orientatiu final.
+
+El detall intern de tarifes per nit i de l'escalat no es copia al pressupost.
 
 ## Fitxers
 

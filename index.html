@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#1f2a24" />
   <title>Rocallaura · Calculadora d'allotjament</title>
-  <link rel="stylesheet" href="styles.css?v=20261006-5" />
+  <link rel="stylesheet" href="styles.css?v=20261006-6" />
 </head>
 <body>
   <main class="shell">
@@ -45,22 +45,13 @@
       <div id="calendarGrid" class="calendar-grid" role="grid" aria-label="Calendari de selecció i temporades"></div>
 
       <div class="selection-panel">
-        <div class="selection-dates">
-          <div>
-            <span class="selection-label">Entrada</span>
-            <strong id="selectedCheckin">Selecciona un dia</strong>
-          </div>
-          <span class="selection-arrow">→</span>
-          <div>
-            <span class="selection-label">Sortida</span>
-            <strong id="selectedCheckout">—</strong>
-          </div>
+        <div class="selection-summary">
+          <span class="selection-label">Estada seleccionada</span>
+          <strong id="selectionSummary">Selecciona entrada i sortida al calendari</strong>
         </div>
-        <p id="selectionHint" class="selection-hint">Toca el dia d'entrada i després el dia de sortida.</p>
+        <p id="selectionHint" class="selection-hint">Primer toc: entrada · segon toc: sortida.</p>
         <button id="clearDates" class="text-button" type="button" hidden>Netejar dates</button>
       </div>
-
-      <div id="dateSpecialNotice" class="date-special-notice" hidden></div>
 
       <div class="bungalow-row">
         <div>
@@ -73,6 +64,8 @@
           <button id="bungalowPlus" type="button" aria-label="Afegir un bungalow">+</button>
         </div>
       </div>
+
+      <div id="dateSpecialNotice" class="date-special-notice" hidden></div>
 
       <div id="formError" class="error" role="alert" hidden></div>
     </section>
@@ -194,6 +187,6 @@
     </footer>
   </main>
 
-  <script src="app.js?v=20261006-5"></script>
+  <script src="app.js?v=20261006-6"></script>
 </body>
 </html>

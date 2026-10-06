@@ -172,17 +172,10 @@ h2 { margin: 0; font-size: 1.15rem; letter-spacing: -.02em; }
   border-radius: 14px;
   background: #fff;
 }
-.selection-dates {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  gap: 10px;
-  align-items: center;
-}
-.selection-dates > div { min-width: 0; display: grid; gap: 2px; }
+.selection-summary { display: grid; gap: 4px; }
 .selection-label { color: var(--muted); font-size: .66rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
-.selection-dates strong { font-size: .84rem; line-height: 1.25; }
-.selection-arrow { color: var(--muted); }
-.selection-hint { margin: 8px 0 0; color: var(--muted); font-size: .76rem; line-height: 1.4; }
+.selection-summary strong { font-size: .92rem; line-height: 1.35; }
+.selection-hint { margin: 7px 0 0; color: var(--muted); font-size: .76rem; line-height: 1.4; }
 
 .date-special-notice {
   margin-top: 10px;
