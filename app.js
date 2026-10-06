@@ -1,3 +1,4 @@
+/* Rocallaura calculadora v9 · 2026-10-06 */
 /*
   ROCALLAURA · CALCULADORA D'ALLOTJAMENT
   --------------------------------------
