@@ -52,11 +52,11 @@ Això també resol automàticament les estades que barregen temporada alta i bai
 
 ### Alta especial
 
-Ponts i dates puntuals configurats manualment a `SPECIAL_HIGH_RANGES` dins de `app.js`.
+Ponts i dates puntuals configurats manualment a `SPECIAL_HIGH_RANGES` dins de `app.js`. El mateix calendari els mostra visualment, però la tarifació nocturna tracta el dia final del pont com a data de sortida: la nit d’aquell dia ja torna a la tarifa normal.
 
-Per exemple, el Pont del 12 d'octubre de 2026 està configurat del **9 al 12 d'octubre** perquè la nit de divendres 9 formi part de l'estada del pont.
+Per exemple, el Pont del 12 d'octubre de 2026 es mostra al calendari del **9 al 12 d'octubre**. A efectes de preu, són especials les nits del **9, 10 i 11**; la nit del **12 al 13** torna a la tarifa normal.
 
-Les dates especials tenen prioritat visual i tarifària i es cobren com a temporada alta.
+Les dates especials tenen prioritat visual. En tarifació, el rang funciona per nits: inici inclòs i dia final exclòs. Això evita cobrar com a pont la nit posterior al festiu.
 
 ## Calendari
 

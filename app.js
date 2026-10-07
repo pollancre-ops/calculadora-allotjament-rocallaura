@@ -1,4 +1,4 @@
-/* Rocallaura calculadora v9 · 2026-10-06 */
+/* Rocallaura calculadora v10 · 2026-10-07 */
 /*
   ROCALLAURA · CALCULADORA D'ALLOTJAMENT
   --------------------------------------
@@ -20,7 +20,9 @@ const PRICING = {
   maxPeoplePerBungalow: 5
 };
 
-// Rangs especials tractats com a temporada alta. Els extrems són inclusius.
+// Rangs especials visibles al calendari.
+// Per tarifar NITS, `start` és inclusiu i `end` és EXCLUSIU: el dia final
+// continua visible com a festiu/pont al calendari, però la seva nit ja no es cobra com a especial.
 const SPECIAL_HIGH_RANGES = [
   { start: '2026-05-01', end: '2026-05-03', label: "Pont de l'1 de maig", shortLabel: 'Pont 1 maig' },
   { start: '2026-10-09', end: '2026-10-12', label: "Pont del 12 d'octubre", shortLabel: 'Pont 12 oct.' },
@@ -123,9 +125,14 @@ function sameDay(a, b) {
   return Boolean(a && b && toISO(a) === toISO(b));
 }
 
-function dateInRange(date, startISO, endISO) {
+function dateInRangeInclusive(date, startISO, endISO) {
   const iso = toISO(date);
   return iso >= startISO && iso <= endISO;
+}
+
+function nightInSpecialRange(date, startISO, endISO) {
+  const iso = toISO(date);
+  return iso >= startISO && iso < endISO;
 }
 
 function easterSunday(year) {
@@ -148,13 +155,32 @@ function easterSunday(year) {
 
 function easterHighRange(year) {
   const easter = easterSunday(year);
-  return { start: addDays(easter, -6), end: addDays(easter, 1) };
+  return {
+    start: addDays(easter, -6),
+    calendarEnd: addDays(easter, 1),
+    pricingEndExclusive: addDays(easter, 1)
+  };
+}
+
+function getSpecialCalendarMeta(date) {
+  for (const range of SPECIAL_HIGH_RANGES) {
+    if (dateInRangeInclusive(date, range.start, range.end)) {
+      return {
+        season: 'high',
+        kind: 'special',
+        reason: range.label,
+        shortLabel: range.shortLabel || range.label
+      };
+    }
+  }
+  return null;
 }
 
 function getSeasonMeta(date) {
-  // Les dates especials tenen prioritat visual i tarifària.
+  // TARIFACIÓ: en un pont, el dia final és el dia de sortida/festiu i la seva nit
+  // no forma part del pont. Per això `end` és exclusiu per al preu nocturn.
   for (const range of SPECIAL_HIGH_RANGES) {
-    if (dateInRange(date, range.start, range.end)) {
+    if (nightInSpecialRange(date, range.start, range.end)) {
       return {
         season: 'high',
         kind: 'special',
@@ -168,8 +194,36 @@ function getSeasonMeta(date) {
   const month = date.getUTCMonth() + 1;
   const day = date.getUTCDate();
 
+  // Setmana Santa es mostra fins al Dilluns de Pasqua, però la nit del dilluns
+  // ja no es considera temporada alta: l'última nit alta és diumenge.
   const easterRange = easterHighRange(year);
-  if (date >= easterRange.start && date <= easterRange.end) {
+  if (date >= easterRange.start && date < easterRange.pricingEndExclusive) {
+    return { season: 'high', kind: 'high', reason: 'Setmana Santa', shortLabel: 'Setm. Santa' };
+  }
+
+  // Nadal/Reis: el 6 de gener continua visible com a període festiu, però
+  // la nit del 6 al 7 ja és tarifa normal.
+  if ((month === 12 && day >= 24) || (month === 1 && day <= 5)) {
+    return { season: 'high', kind: 'high', reason: 'Nadal i Reis', shortLabel: 'Nadal / Reis' };
+  }
+
+  if (month >= 6 && month <= 9) {
+    return { season: 'high', kind: 'high', reason: 'Temporada alta', shortLabel: '' };
+  }
+
+  return { season: 'low', kind: 'low', reason: 'Temporada baixa', shortLabel: '' };
+}
+
+function getCalendarMeta(date) {
+  const special = getSpecialCalendarMeta(date);
+  if (special) return special;
+
+  const year = date.getUTCFullYear();
+  const month = date.getUTCMonth() + 1;
+  const day = date.getUTCDate();
+  const easterRange = easterHighRange(year);
+
+  if (date >= easterRange.start && date <= easterRange.calendarEnd) {
     return { season: 'high', kind: 'high', reason: 'Setmana Santa', shortLabel: 'Setm. Santa' };
   }
 
@@ -264,7 +318,7 @@ function renderCalendar() {
 
   for (let day = 1; day <= lastDay; day++) {
     const date = new Date(Date.UTC(year, month, day));
-    const meta = getSeasonMeta(date);
+    const meta = getCalendarMeta(date);
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = `calendar-day ${meta.kind}`;
